@@ -1,18 +1,24 @@
-#!/usr/bin/bash
+#!/usr/bin/bash -x
 
 ETHDEV=eno1
 
 # create_container(name, dest_port, route_to)
 create_container() {
-    lxc-create -t download -n $1
-    lxc-start -n $1
-    lxc-attach -n $1 --clear-env -- "init 2; /usr/bin/apt install openssh-server"
-    IP=$(lxc-info -n $1 -iH)
+    lxc-create -t download -n ct-$1
+    lxc-start -n ct-$1
 
-    echo "iptables -t nat -A PREROUTING -i $ETHDEV -p tcp --dport $2 -j DNAT --to $IP:22" \
-        > /etc/network/iptables.rules.v4
+    echo "enter into the shell:"
+    echo "# apt install openssh-server && adduser $1 && adduser $1 sudo"
+
+    lxc-attach -n ct-$1
+    IP=$(lxc-info -n ct-$1 -iH)
+
+    iptables -t nat -A PREROUTING -i $ETHDEV -p tcp --dport $2 -j DNAT --to $IP:22
+    iptables-save > /etc/iptables/rules.v4
+
+    echo "lxc.start.auto = 1" >> /var/lib/lxc/$1/config
 }
 
-create_container miner 2229
-create_container dev   2231
+# Example:
+# create_container laddi 2208
 
