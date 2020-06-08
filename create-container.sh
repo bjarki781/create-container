@@ -2,23 +2,34 @@
 
 ETHDEV=eno1
 
-# create_container(name, dest_port, route_to)
 create_container() {
-    lxc-create -t download -n ct-$1
-    lxc-start -n ct-$1
+    local name=$1
+    local dest_port=$2
+    local ct_path="/var/lib/lxc/ct-$name/rootfs"
 
-    echo "enter into the shell:"
-    echo "# apt install openssh-server && adduser $1 && adduser $1 sudo"
+    exec <dist
 
-    lxc-attach -n ct-$1
-    IP=$(lxc-info -n ct-$1 -iH)
+    lxc-create -t download -n ct-$name
+    lxc-start -n ct-$name
+    sleep 4 # let it fully start
 
-    iptables -t nat -A PREROUTING -i $ETHDEV -p tcp --dport $2 -j DNAT --to $IP:22
+    lxc-attach -n ct-$name -- adduser --disabled-password --gecos ",,,," $name
+    lxc-attach -n ct-$name -- adduser $name sudo
+    lxc-attach -n ct-$name -- apt install openssh-server
+
+    IP=$(lxc-info -n ct-$name -iH)
+
+    iptables -t nat -A PREROUTING -i $ETHDEV -p tcp --dport $dest_port -j DNAT --to $IP:22
     iptables-save > /etc/iptables/rules.v4
 
-    echo "lxc.start.auto = 1" >> /var/lib/lxc/$1/config
+    echo "lxc.start.auto = 1" >> /var/lib/lxc/ct-$name/config
+
+    if $3; then
+	    mkdir $ct_path/home/$name/.ssh 
+        cp authorized_keys $ct_path/home/$name/.ssh/
+    fi
 }
 
-# Example:
-# create_container laddi 2208
-
+# Test
+lxc-destroy -fn ct-laddi
+create_container laddi 2208 true
