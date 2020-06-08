@@ -27,9 +27,8 @@ create_container() {
     if $3; then
 	    mkdir $ct_path/home/$name/.ssh 
         cp authorized_keys $ct_path/home/$name/.ssh/
+        lxc-attach -n ct-$name -- chown $name -R /home/$name/.ssh
+        lxc-attach -n ct-$name -- chgrp $name -R /home/$name/.ssh
     fi
 }
 
-# Test
-lxc-destroy -fn ct-laddi
-create_container laddi 2208 true
