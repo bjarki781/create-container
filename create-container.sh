@@ -1,6 +1,6 @@
 #!/usr/bin/bash -x
 
-ETHDEV=eno1
+ETHDEV=$(route | grep '^default' | grep -o '[^ ]*$')
 
 create_container() {
     local name=$1
