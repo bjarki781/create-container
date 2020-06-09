@@ -2,9 +2,9 @@
 
 set -x
 
-# get the create-container function
+# get the create_container function
 . create-container.sh
 
-create-container grafari 412 true
-create-container throun  404 true
+create_container miner 412 true
+create_container devel 404 true
 
