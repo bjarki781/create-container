@@ -5,25 +5,23 @@ set -x
 create_container() {
     local name=$1
     local dest_port=$2
-    local withpasswd=$3
+    local opt=$3    # only takes "withsk": with shared key
 
     local ETHDEV
     ETHDEV=$(route | grep '^default' | grep -o '[^ ]*$')
 
-    exec <dist
-
-    cp /etc/lxc/default.conf ~/.config/lxc/default.conf
+    cp /etc/lxc/default.conf /root/.config/lxc/default.conf
     echo "lxc.idmap = u 0 200000 65536" >> /root/.config/lxc/default.conf
     echo "lxc.idmap = g 0 200000 65536" >> /root/.config/lxc/default.conf
 
-    lxc-create -n ct-"$name" -t download -- --no-validate
+    lxc-create -n ct-"$name" -t download -- --no-validate -d ubuntu -r bionic -a amd64
     lxc-start -n ct-"$name"
     sleep 4 # let it fully start
 
-    if $withpasswd; then
-        lxc-attach -n ct-"$name" -- adduser --gecos ",,,," "$name"
-    else
+    if [ "$opt" = "withsk" ]; then
         lxc-attach -n ct-"$name" -- adduser --disabled-password --gecos ",,,," "$name"
+    else
+        lxc-attach -n ct-"$name" -- adduser --gecos ",,,," "$name"
     fi
 
     lxc-attach -n ct-"$name" -- adduser "$name" sudo
@@ -37,7 +35,7 @@ create_container() {
 
     echo "lxc.start.auto = 1" >> /var/lib/lxc/ct-"$name"/config
 
-    if [ ! "$withpasswd" ]; then
+    if [ "$opt" = "withsk" ]; then
         lxc-attach -n ct-"$name" -- mkdir /home/"$name"/.ssh
         lxc-attach -n ct-"$name" -- /bin/sh -c \
                    "/bin/cat > /home/$name/.ssh/authorized_keys" < authorized_keys
@@ -45,6 +43,9 @@ create_container() {
     fi
 }
 
-lxc-destroy -fn ct-laddi
-create_container laddi 2208 false
+if [ "$#" = 0 ]; then
+    exit
+else
+    create_container "$@"
+fi
 
