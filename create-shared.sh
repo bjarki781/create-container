@@ -1,4 +1,6 @@
-#!/usr/bin/bash -x
+#!/usr/bin/env bash
+
+set -x
 
 # get the create-container function
 . create-container.sh
