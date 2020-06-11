@@ -3,9 +3,9 @@
 set -x
 
 create_container() {
-    local name=$1
-    local dest_port=$2
-    local opt=$3    # only takes "withsk": with shared key
+    local name="$1"
+    local dest_port="$2"
+    local opt="$3"    # only takes "withsk": with shared key
 
     local ETHDEV
     ETHDEV=$(route | grep '^default' | grep -o '[^ ]*$')
