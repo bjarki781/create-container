@@ -25,12 +25,14 @@ create_container() {
 
     if [ "$opt" = "withsk" ]; then
         lxc-attach -n ct-"$name" -- adduser --disabled-password --gecos ",,,," "$name"
+        # if we log in using only keys then the root account can be open
+        lxc-attach -n ct-"$name" -- passwd root <<< $(echo -e "smile\nsmile")
     else
         lxc-attach -n ct-"$name" -- adduser --gecos ",,,," "$name"
+        lxc-attach -n ct-"$name" -- adduser "$name" sudo
     fi
 
-    lxc-attach -n ct-"$name" -- adduser "$name" sudo
-    lxc-attach -n ct-"$name" -- apt install openssh-server
+    lxc-attach -n ct-"$name" -- apt -y install openssh-server
 
     local IP=$(lxc-info -n ct-"$name" -iH)
 
