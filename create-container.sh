@@ -3,6 +3,10 @@
 set -x
 
 create_container() {
+    if [ "$#" != 3 ]; then
+        return 1
+    fi
+
     local name="$1"
     local dest_port="$2"
     local opt="$3"    # only takes "withsk": with shared key
@@ -43,10 +47,4 @@ create_container() {
         lxc-attach -n ct-"$name" -- chown "$name:$name" -R /home/"$name"/.ssh
     fi
 }
-
-if [ "$#" != 3 ]; then
-    exit
-else
-    create_container "$@"
-fi
 
