@@ -50,3 +50,6 @@ create_container() {
     fi
 }
 
+if [ $# = 3 ]; then
+    create_container "$@"
+fi
